@@ -73,10 +73,10 @@ export function HomeScreen() {
 
             <Button
               size="lg"
-              className="w-full mb-4"
+              className="w-full mb-4 bg-gradient-to-r from-primary to-success hover:from-primary/90 hover:to-success/90 text-white font-bold text-lg shadow-lg"
               onClick={() => window.open('https://abdmbeta.abdm.gov.in/', '_blank', 'noopener,noreferrer')}
             >
-              Connect to ABDM
+              🔐 Connect to ABDM
             </Button>
 
             <div className="space-y-2">
