@@ -94,7 +94,7 @@ export async function getReportStatus(reportId: string): Promise<{
   progress?: number;
   error_message?: string;
 }> {
-  return apiRequest(`/reports/${reportId}/status`);
+  return apiFetch(`/reports/${reportId}/status`);
 }
 
 /**

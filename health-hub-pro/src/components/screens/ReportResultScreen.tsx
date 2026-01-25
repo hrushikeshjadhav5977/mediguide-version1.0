@@ -170,7 +170,7 @@ export function ReportResultScreen() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 pb-32 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto px-5 py-4 pb-40 custom-scrollbar">
         {/* Report Image Section - Always Visible */}
         {report.image_url && (
           <div className="mb-8 animate-fade-in relative z-10">
@@ -195,7 +195,7 @@ export function ReportResultScreen() {
               <img
                 src={getStorageUrl(report.image_url)}
                 alt="Original Report"
-                className="w-full h-auto max-h-[500px] object-contain mx-auto relative z-10 transition-transform duration-300 group-hover:scale-[1.01]"
+                className="w-full h-auto max-h-[400px] object-contain mx-auto relative z-10 transition-transform duration-300 group-hover:scale-[1.01]"
                 onError={(e) => e.currentTarget.style.display = 'none'}
               />
 
@@ -343,7 +343,7 @@ export function ReportResultScreen() {
       </div>
 
       {/* Fixed Bottom Bar */}
-      <div className="absolute bottom-0 left-0 right-0 px-5 py-4 bg-card border-t border-border flex items-center gap-3">
+      <div className="absolute bottom-0 left-0 right-0 px-5 py-4 bg-card border-t border-border flex items-center gap-3 z-20">
 
         <Button size="default" className="flex-1">
           Save to ABDM

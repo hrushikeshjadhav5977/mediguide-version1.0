@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getSession, onAuthStateChange, getCurrentUser } from '@/lib/auth';
 import type { Session } from '@supabase/supabase-js';
 import { FamilyMember } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export type Screen =
   | 'splash'
@@ -82,6 +83,8 @@ interface AppContextType {
   setCurrentReportId: (id: string | null) => void;
   viewingMember: FamilyMember | null;
   setViewingMember: (member: FamilyMember | null) => void;
+  openChatbot: boolean;
+  setOpenChatbot: (value: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -113,6 +116,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [currentReportId, setCurrentReportId] = useState<string | null>(null);
   const [viewingMember, setViewingMember] = useState<FamilyMember | null>(null);
+  const [openChatbot, setOpenChatbot] = useState(false);
 
   /**
    * Initialize authentication state on app load
@@ -171,6 +175,104 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  /**
+   * Sync activeTab with currentScreen
+   * Ensures tab highlight always matches the current screen
+   */
+  useEffect(() => {
+    // Map screens to their corresponding tabs
+    const screenToTabMap: Record<Screen, Tab> = {
+      'home': 'home',
+      'scan': 'scan',
+      'scanning': 'scan',
+      'scan-error': 'scan',
+      'report-result': 'home',
+      'report-explanation': 'home',
+      'history': 'history',
+      'family': 'family',
+      'add-family': 'family',
+      'nickname-popup': 'family',
+      'profile': 'profile',
+      'profile-setup': 'profile',
+      'splash': 'home',
+      'onboarding': 'home',
+      'login': 'home',
+      'signup': 'home',
+    };
+
+    const correspondingTab = screenToTabMap[currentScreen];
+    if (correspondingTab && correspondingTab !== activeTab) {
+      setActiveTab(correspondingTab);
+    }
+  }, [currentScreen, activeTab, setActiveTab]);
+
+  /**
+   * Load user profile on app startup
+   * Fetches profile data from Supabase after authentication
+   */
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+
+        if (!authUser) {
+          console.log('[AppContext] No authenticated user');
+          return;
+        }
+
+        console.log('[AppContext] Loading profile for user:', authUser.id);
+
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+
+        if (profileError) {
+          console.log('[AppContext] No profile found:', profileError.message);
+          return;
+        }
+
+        if (profileData) {
+          console.log('[AppContext] Profile loaded:', profileData);
+
+          // Map Supabase profile to app user format
+          const fullName = (profileData.full_name as string) ?? '';
+          const nameParts = fullName.split(' ');
+          const firstName = nameParts[0] ?? '';
+          const lastName = nameParts.slice(1).join(' ') ?? '';
+
+          const userData = {
+            firstName,
+            lastName,
+            email: authUser.email ?? '',
+            dateOfBirth: (profileData.dob as string) ?? '',
+            phoneNumber: (profileData.phone_number as string) ?? '',
+            gender: (profileData.gender as string) ?? '',
+            bloodGroup: (profileData.blood_group as string) ?? '',
+            allergies: (profileData.allergies as string) ?? '',
+            conditions: (profileData.health_conditions as string) ?? '',
+            emergencyContact: {
+              name: (profileData.em_contact_name as string) ?? '',
+              relationship: (profileData.em_relationship as string) ?? '',
+              phone: (profileData.em_phone as string) ?? '',
+            },
+          };
+
+          console.log('[AppContext] Setting user data:', userData);
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('[AppContext] Error loading profile:', error);
+      }
+    };
+
+    // Only load profile if logged in
+    if (isLoggedIn) {
+      loadUserProfile();
+    }
+  }, [isLoggedIn, setUser]);
+
   return (
     <AppContext.Provider
       value={{
@@ -204,6 +306,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setCurrentReportId,
         viewingMember,
         setViewingMember,
+        openChatbot,
+        setOpenChatbot,
       }}
     >
       {isCheckingAuth ? null : children}

@@ -327,7 +327,7 @@ export function HistoryScreen() {
 
       {/* Delete FAB */}
       {isDeleteMode && (
-        <div className="fixed bottom-24 right-5 flex flex-col gap-2 items-end">
+        <div className="fixed bottom-24 right-5 flex flex-col gap-2 items-end z-50">
           {/* Cancel Button */}
           <button
             onClick={() => {

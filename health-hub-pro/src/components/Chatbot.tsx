@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { askMediBot } from '@/lib/api';
 import { toast } from 'sonner';
+import { useApp } from '@/contexts/AppContext';
 
 interface Message {
     id: string;
@@ -14,10 +15,12 @@ interface Message {
 
 interface ChatbotProps {
     reportId: string;
+    initialOpen?: boolean;
 }
 
-export function Chatbot({ reportId }: ChatbotProps) {
-    const [isOpen, setIsOpen] = useState(false);
+export function Chatbot({ reportId, initialOpen = false }: ChatbotProps) {
+    const { openChatbot, setOpenChatbot } = useApp();
+    const [isOpen, setIsOpen] = useState(initialOpen);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: 'welcome',
@@ -32,6 +35,14 @@ export function Chatbot({ reportId }: ChatbotProps) {
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
+
+    // Listen to openChatbot from AppContext
+    useEffect(() => {
+        if (openChatbot) {
+            setIsOpen(true);
+            setOpenChatbot(false); // Reset the flag
+        }
+    }, [openChatbot, setOpenChatbot]);
 
     useEffect(() => {
         if (isOpen) {

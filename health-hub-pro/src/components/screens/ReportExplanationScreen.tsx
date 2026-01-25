@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getReport, getReportParameters } from '@/lib/api';
 import { toast } from 'sonner';
+import { ChatbotModal } from '@/components/ChatbotModal';
 
 interface ExplanationItem {
     id: string;
@@ -26,6 +27,7 @@ export function ReportExplanationScreen() {
     const [report, setReport] = useState<any>(null);
     const [items, setItems] = useState<ExplanationItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     const handleBack = () => {
         setCurrentScreen('report-result');
@@ -262,7 +264,7 @@ export function ReportExplanationScreen() {
                         <Button
                             variant="secondary"
                             className="w-full bg-white text-primary hover:bg-white/90"
-                            onClick={() => setCurrentScreen('report-result')}
+                            onClick={() => setIsChatOpen(true)}
                         >
                             Ask AI Assistant
                         </Button>
@@ -271,6 +273,15 @@ export function ReportExplanationScreen() {
                     <div className="h-8" /> {/* Spacer */}
                 </div>
             </div>
+
+            {/* Chatbot Modal */}
+            {currentReportId && (
+                <ChatbotModal
+                    reportId={currentReportId}
+                    isOpen={isChatOpen}
+                    onClose={() => setIsChatOpen(false)}
+                />
+            )}
         </div>
     );
 }

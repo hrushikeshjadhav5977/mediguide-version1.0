@@ -23,62 +23,76 @@ export function ScanningScreen() {
     let isMounted = true;
 
     if (!currentReportId) {
-      console.log('No currentReportId, redirecting to scan');
+      console.log('[ScanningScreen] No currentReportId, redirecting to scan');
       setCurrentScreen('scan');
       return;
     }
+
+    console.log('[ScanningScreen] Mounted with reportId:', currentReportId);
 
     const pollStatus = async () => {
       try {
         if (!isMounted) return;
 
-        console.log(`Polling status for report: ${currentReportId}`);
+        console.log(`[ScanningScreen] Polling status for report: ${currentReportId}`);
         const reportStatus = await getReportStatus(currentReportId);
-        console.log('Received report status:', reportStatus);
+        console.log('[ScanningScreen] Received report status:', reportStatus);
 
         if (!isMounted) return;
 
         const status = reportStatus.status.toLowerCase();
         setStatus(status);
+        console.log('[ScanningScreen] Status normalized to:', status);
 
-        if (status === 'processing') {
+        // Handle different status values
+        const isProcessing = status === 'processing' || status === 'pending';
+        const isCompleted = status === 'completed' || status === 'complete' || status === 'done' || status === 'success';
+        const isFailed = status === 'failed' || status === 'error';
+
+        if (isProcessing) {
+          console.log('[ScanningScreen] Still processing, continuing poll...');
           setProgress(prev => Math.min(prev + 5, 90)); // Gradually increase to 90%
           // Schedule next poll
           timeoutId = setTimeout(pollStatus, 2000);
-        } else if (status === 'completed') {
-          console.log('Report completed, navigating to result...');
+        } else if (isCompleted) {
+          console.log('[ScanningScreen] ✅ Report completed! Navigating to result screen...');
           setProgress(100);
           setTimeout(() => {
             if (isMounted) {
+              console.log('[ScanningScreen] Executing navigation to report-result');
               setCurrentScreen('report-result');
             }
           }, 500);
-        } else if (status === 'failed') {
-          console.error('Report processing failed:', reportStatus.error_message);
+        } else if (isFailed) {
+          console.error('[ScanningScreen] ❌ Report processing failed:', reportStatus.error_message);
           toast.error('Report processing failed. Please try again.');
           setTimeout(() => {
             if (isMounted) {
+              console.log('[ScanningScreen] Navigating to scan-error');
               setCurrentScreen('scan-error');
             }
           }, 500);
         } else {
           // Unknown status, assume processing but log warning
-          console.warn('Unknown status received:', status);
+          console.warn('[ScanningScreen] ⚠️ Unknown status received:', status, '- continuing to poll');
           timeoutId = setTimeout(pollStatus, 2000);
         }
       } catch (error: any) {
-        console.error('Status check failed:', error);
+        console.error('[ScanningScreen] ❌ Status check failed:', error);
         // Continue polling on error (might be temporary network glitch)
         if (isMounted) {
+          console.log('[ScanningScreen] Retrying after error...');
           timeoutId = setTimeout(pollStatus, 2000);
         }
       }
     };
 
     // Start polling
+    console.log('[ScanningScreen] Starting status polling...');
     pollStatus();
 
     return () => {
+      console.log('[ScanningScreen] Unmounting, cleaning up polling');
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
